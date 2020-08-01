@@ -1,6 +1,8 @@
 <template>
   <div id="app">
-    <div class="navigation-buttons">
+    <div class="navigation-buttons" v-if="$route.path !== '/login'">
+      <button @click="logout" class="button is-text is-pulled-left">Logout</button>
+
       <div class="is-pulled-right">
         <router-link to="/products" class="button">
           <i class="fa fa-user-circle"></i>
@@ -28,11 +30,36 @@ import { mapGetters } from "vuex";
 export default {
   name: "App",
   created() {
-    this.$store.dispatch("getCartItems");
-    this.$store.dispatch("getProductItems");
+    const token = localStorage.getItem("token");
+    if (token) {
+      this.updateInitialState(token);
+    }
   },
   computed: {
-    ...mapGetters(["cartQuantity"])
+    ...mapGetters(["token", "cartQuantity"])
+  },
+  watch: {
+    token() {
+      if (this.token) {
+        this.updateInitialState(this.token);
+      }
+    }
+  },
+  methods: {
+    updateInitialState(token) {
+      this.$store.dispatch("getCartItems", token);
+      this.$store.dispatch("getProductItems", token);
+    },
+    logout() {
+      this.$store
+        .dispatch("logout")
+        .then(() => {
+          this.$router.push({ path: "/login" });
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    }
   }
 };
 </script>
